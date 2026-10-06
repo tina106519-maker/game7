@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>星空任務：公因數與公倍數</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#f4f1ff;--dim:#a9a6d6;--gold:#ffd36e;--ok:#7ee0b0;--bad:#ff8fa3;--panel:rgba(14,12,48,.62);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:linear-gradient(180deg,#070b26 0%,#161050 60%,#2b1763 100%) fixed;color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;line-height:1.6}
+#sky{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+main{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:2rem;font-weight:900;margin:8px 0 4px;color:var(--gold);letter-spacing:.04em}
+p{margin:6px 0}
+.panel{background:var(--panel);border:1px solid rgba(255,211,110,.25);border-radius:20px;padding:20px;backdrop-filter:blur(6px)}
+.dim{color:var(--dim)}
+button{font:inherit;cursor:pointer;color:var(--ink)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.mode{display:block;width:100%;text-align:left;margin-top:12px;padding:16px 18px;border-radius:16px;border:2px solid var(--gold);background:rgba(255,211,110,.08);font-size:1.15rem;font-weight:700}
+.mode small{display:block;font-weight:400;color:var(--dim);font-size:.9rem}
+.mode:hover{background:rgba(255,211,110,.2)}
+.bar{display:flex;justify-content:space-between;font-weight:700;margin-bottom:10px}
+.task{font-size:1.1rem;margin:4px 0 2px}
+.pair{font-size:2.4rem;font-weight:900;color:var(--gold);margin:0 0 6px}
+.field{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin:20px 0}
+.star{width:72px;height:72px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:radial-gradient(circle at 35% 30%,#3b3a8f,#1a1858);font-size:1.5rem;font-weight:700;transition:transform .15s,box-shadow .15s}
+.star:hover{transform:scale(1.08)}
+.star.on{border-color:var(--gold);background:radial-gradient(circle at 35% 30%,#ffe9a8,#e3a93a);color:#2a1d00;box-shadow:0 0 22px 4px rgba(255,211,110,.6)}
+.star.ok{border-color:var(--ok);box-shadow:0 0 22px 4px rgba(126,224,176,.55)}
+.star.miss{border-color:var(--ok);border-style:dashed}
+.star.no{border-color:var(--bad);box-shadow:0 0 18px 3px rgba(255,143,163,.5)}
+.go{display:block;margin:0 auto;padding:12px 36px;border-radius:999px;border:0;background:var(--gold);color:#2a1d00;font-weight:900;font-size:1.1rem}
+.go:disabled{opacity:.4;cursor:default}
+.fb{margin-top:16px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.07);font-size:1rem}
+.fb b{color:var(--gold)}
+.big{font-size:3rem;margin:8px 0}
+.hero{display:flex;gap:12px;align-items:flex-end;margin:6px 0 12px}
+.fox{font-size:3.4rem;line-height:1;animation:bob 2.4s ease-in-out infinite}
+.fox.hop{animation:hop .5s}
+.fox.sad{animation:shake .5s}
+.say{position:relative;flex:1;background:#fff;color:#241a5c;font-weight:700;border-radius:16px;padding:10px 14px;font-size:1rem}
+.say:before{content:"";position:absolute;left:-8px;bottom:14px;border:8px solid transparent;border-right-color:#fff;border-left:0}
+.dots{display:flex;gap:8px;align-items:center;justify-content:center;margin:0 0 12px;font-size:1.6rem}
+.dots i{font-style:normal;opacity:.3;filter:grayscale(1);transition:.4s}
+.dots i.lit{opacity:1;filter:none;text-shadow:0 0 14px var(--gold)}
+.dots i.now{opacity:.9;filter:none;animation:bob 1.2s ease-in-out infinite}
+.dots u{width:18px;height:2px;background:rgba(255,255,255,.3)}
+.combo{color:#ffb36e;font-weight:700}
+.burst{position:fixed;z-index:9;pointer-events:none;font-size:1.6rem}
+.shoot{position:fixed;z-index:0;top:8%;left:-10%;width:120px;height:3px;background:linear-gradient(90deg,transparent,#fff);transform:rotate(25deg);opacity:0;animation:shoot 5s 1.5s infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+@keyframes hop{30%{transform:translateY(-26px) rotate(-12deg)}60%{transform:translateY(0) rotate(10deg)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes shoot{0%{opacity:0;transform:translate(0,0) rotate(25deg)}8%{opacity:1}30%{opacity:0;transform:translate(120vw,55vh) rotate(25deg)}100%{opacity:0}}
+@keyframes drift{50%{translate:0 -6px}}
+@media(prefers-reduced-motion:no-preference){.star{animation:drift 3s ease-in-out infinite}.star:nth-child(2n){animation-delay:-1s}.star:nth-child(3n){animation-delay:-2s}}
+@media(prefers-reduced-motion:reduce){.fox,.dots i.now,.shoot{animation:none}}
+@media(max-width:420px){.star{width:62px;height:62px;font-size:1.3rem}}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas><div class="shoot" aria-hidden="true"></div>
+<main id="app"></main>
+<script>
+(function(){
+// ---- starry sky ----
+var c=document.getElementById('sky'),x=c.getContext('2d'),S=[],still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fit(){c.width=innerWidth;c.height=innerHeight;S=[];for(var i=0;i<Math.floor(c.width*c.height/5000);i++)S.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.6+.3,p:Math.random()*6.3,s:Math.random()*.03+.01})}
+function draw(){x.clearRect(0,0,c.width,c.height);S.forEach(function(t){t.p+=t.s;x.globalAlpha=still?.8:.45+.55*Math.abs(Math.sin(t.p));x.fillStyle='#fff';x.beginPath();x.arc(t.x,t.y,t.r,0,6.3);x.fill()});if(!still)requestAnimationFrame(draw)}
+addEventListener('resize',function(){fit();if(still)draw()});fit();draw();
+
+// ---- helpers ----
+var app=document.getElementById('app');
+var FP=[[12,18],[8,12],[16,24],[15,20],[18,24],[20,30],[24,36],[28,42],[30,45],[14,21],[36,48],[10,25]];
+var MP=[[4,6],[3,5],[6,8],[4,10],[6,9],[3,4],[8,12],[9,12],[5,6],[6,10]];
+function shuf(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function gcd(a,b){return b?gcd(b,a%b):a}
+function facs(n){var r=[];for(var i=1;i<=n;i++)if(n%i==0)r.push(i);return r}
+function mults(n,lim){var r=[];for(var i=n;i<=lim;i+=n)r.push(i);return r}
+function inA(a,v){return a.indexOf(v)>-1}
+function uniq(a){return a.filter(function(v,i){return a.indexOf(v)==i})}
+
+var streak=0,mode,round,score,total=5,q,sel,done,queue;
+
+function makeQ(){
+  var p=queue[round],a=p[0],b=p[1],ans,cand,fa,fb,info;
+  if(mode=='f'){
+    fa=facs(a);fb=facs(b);ans=fa.filter(function(v){return inA(fb,v)});
+    var pool=uniq(fa.concat(fb)).filter(function(v){return !inA(ans,v)});
+    var extra=[];for(var i=2;i<=Math.max(a,b);i++)if(!inA(ans,i)&&!inA(pool,i)&&a%i&&b%i)extra.push(i);
+    var need=Math.max(8,ans.length+3)-ans.length;
+    cand=ans.concat(shuf(pool).slice(0,Math.min(need-1,pool.length)));
+    cand=cand.concat(shuf(extra).slice(0,need-(cand.length-ans.length)));
+    info='<b>'+a+'</b> 的因數：'+fa.join('、')+'<br><b>'+b+'</b> 的因數：'+fb.join('、')+'<br>公因數：'+ans.join('、')+'。最大公因數是 <b>'+Math.max.apply(null,ans)+'</b>。';
+  }else{
+    var l=a*b/gcd(a,b),lim=l*3;fa=mults(a,lim);fb=mults(b,lim);
+    ans=fa.filter(function(v){return inA(fb,v)});
+    var pool2=uniq(fa.concat(fb)).filter(function(v){return !inA(ans,v)});
+    cand=ans.concat(shuf(pool2).slice(0,5));
+    var s2=lim>0?'':'';
+    info='<b>'+a+'</b> 的倍數：'+fa.join('、')+'<br><b>'+b+'</b> 的倍數：'+fb.join('、')+'<br>公倍數：'+ans.join('、')+'。最小公倍數是 <b>'+l+'</b>。';
+  }
+  cand=uniq(cand).sort(function(m,n){return m-n});
+  return {a:a,b:b,ans:ans,cand:cand,info:info};
+}
+
+function home(){
+  app.innerHTML='<h1>星空任務</h1><p class="dim">五年級數學：公因數與公倍數</p>'+
+  '<div class="hero"><div class="fox" aria-hidden="true">🦊</div><div class="say">我是小星狐！星座的星星全熄滅了，快來幫我找回 5 顆星，把星空點亮吧！🚀</div></div>'+
+  '<div class="panel">'+
+  '<button class="mode" data-m="f">🌠 採集公因數星星<small>找出兩個數都能整除的數</small></button>'+
+  '<button class="mode" data-m="m">🪐 採集公倍數星星<small>找出兩個數共同的倍數</small></button></div>';
+  [].forEach.call(app.querySelectorAll('.mode'),function(b){b.onclick=function(){start(b.dataset.m)}});
+}
+
+function start(m){mode=m;round=0;score=0;streak=0;queue=shuf(m=='f'?FP:MP).slice(0,total);next()}
+
+function next(){
+  q=makeQ();sel=[];done=false;
+  var f=mode=='f';
+  var d='';for(var k=0;k<total;k++){d+=(k?'<u></u>':'')+'<i class="'+(k<round?'lit':k==round?'now':'')+'">⭐</i>'}
+  var hi=['出發！找到星星就點亮它！','這一關的星星藏得有點多喔～','你是星空小博士，加油！','只差一點點就能點亮星座了！','最後一關！星座等你點亮！'];
+  app.innerHTML='<div class="dots" aria-label="第 '+(round+1)+' 關，共 '+total+' 關">'+d+'</div>'+
+  '<div class="hero"><div class="fox" id="fox" aria-hidden="true">🦊</div><div class="say" id="say">'+hi[round]+'</div></div>'+
+  '<div class="bar"><span>第 '+(round+1)+' / '+total+' 關</span><span>★ '+score+(streak>1?' <span class="combo">🔥連續 '+streak+'</span>':'')+'</span></div>'+
+  '<div class="panel"><p class="task">'+(f?'找出所有的公因數':'找出所有的公倍數')+'（可複選，把星星點亮）</p>'+
+  '<p class="pair">'+q.a+' 和 '+q.b+'</p>'+
+  '<div class="field" id="field"></div>'+
+  '<button class="go" id="go" disabled>確認答案</button><div id="fb"></div></div>';
+  var field=document.getElementById('field');
+  q.cand.forEach(function(v){
+    var s=document.createElement('button');s.className='star';s.textContent=v;s.setAttribute('aria-pressed','false');
+    s.onclick=function(){if(done)return;var i=sel.indexOf(v);if(i>-1)sel.splice(i,1);else sel.push(v);s.classList.toggle('on',i<0);s.setAttribute('aria-pressed',i<0);document.getElementById('go').disabled=!sel.length};
+    s.dataset.v=v;field.appendChild(s);
+  });
+  document.getElementById('go').onclick=check;
+}
+
+function check(){
+  if(done)return;done=true;
+  var right=sel.length==q.ans.length&&sel.every(function(v){return inA(q.ans,v)});
+  [].forEach.call(document.querySelectorAll('.star'),function(s){
+    var v=+s.dataset.v,isA=inA(q.ans,v),on=inA(sel,v);
+    s.classList.remove('on');
+    if(on&&isA)s.classList.add('ok');else if(on&&!isA)s.classList.add('no');else if(!on&&isA)s.classList.add('miss');
+  });
+  var gain=right?10+(streak>=1?5:0):0;score+=gain;streak=right?streak+1:0;
+  var last=round==total-1,fox=document.getElementById('fox'),say=document.getElementById('say');
+  var win=['太棒了！你好厲害！','答對啦！星星亮起來了！','哇～你是數學小天才！','完美！我們一起閃閃發光！'],lose=['沒關係！看看綠色的星星，下一關一定行！','差一點點！看解說就會懂囉～','失敗是成功的好朋友，加油！'];
+  say.textContent=right?win[Math.floor(Math.random()*win.length)]:lose[Math.floor(Math.random()*lose.length)];
+  fox.className='fox '+(right?'hop':'sad');
+  if(right)burst();
+  document.getElementById('fb').innerHTML='<div class="fb"><b>'+(right?'答對了！+'+gain+' 顆星'+(gain>10?'（連續答對加碼 +5）':''):'再想想看，綠色是正確答案')+'</b><br>'+q.info+'</div>';
+  var g=document.getElementById('go');g.disabled=false;g.textContent=last?'看成績':'下一關';g.style.marginTop='16px';
+  g.onclick=function(){round++;last?end():next()};
+}
+
+function burst(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  var g=document.getElementById('go').getBoundingClientRect(),cx=g.left+g.width/2,cy=g.top;
+  var em=['⭐','✨','🌟','💫','🎉'];
+  for(var i=0;i<18;i++){var e=document.createElement('span');e.className='burst';e.textContent=em[i%5];e.style.left=cx+'px';e.style.top=cy+'px';document.body.appendChild(e);
+    var a=Math.random()*6.28,d=80+Math.random()*140;
+    e.animate([{transform:'translate(0,0) scale(.4)',opacity:1},{transform:'translate('+Math.cos(a)*d+'px,'+(Math.sin(a)*d-60)+'px) scale(1.3) rotate(240deg)',opacity:0}],{duration:900+Math.random()*500,easing:'ease-out'}).onfinish=(function(n){return function(){n.remove()}})(e);}
+}
+function end(){
+  var mx=total*10+(total-1)*5,r=score/mx,t=r>=.9?'星空大師':r>=.6?'星空探險家':'星空見習生',n=r>=.9?5:r>=.6?3:1,m=r>=.9?'星座全部亮起來了！你是我的英雄！🎉':r>=.6?'星空亮了一大半！再玩一次就能全亮囉！':'我們一起練習，星星會越來越亮的！💪';
+  app.innerHTML='<div class="panel" style="text-align:center"><div class="hero" style="justify-content:center"><div class="fox hop" aria-hidden="true">🦊</div><div class="say">'+m+'</div></div><p class="dim">任務完成</p><div class="big" aria-label="'+n+' 顆星">'+'★'.repeat(n)+'<span style="opacity:.25">'+'★'.repeat(5-n)+'</span></div>'+
+  '<h1>'+t+'</h1><p>共獲得 '+score+' / '+mx+' 顆星</p>'+
+  '<button class="go" id="again" style="margin-top:20px">再玩一次</button></div>';
+  document.getElementById('again').onclick=home;
+}
+home();
+})();
+</script>
+</body>
+</html>
